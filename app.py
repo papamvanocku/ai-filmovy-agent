@@ -8,10 +8,8 @@ import os
 from google import genai
 from google.genai import types
 
-# ==========================================
-# LOKÁLNÍ API KLÍČ (Pro hosting nech prázdné!)
-# ==========================================
-LOKALNI_API_KEY = ""  # <-- Na GitHub nahrávej PRÁZDNÉ! Na webu se klíč načte ze Secrets.
+# LOKÁLNÍ API KLÍČ 
+LOKALNI_API_KEY = "" 
 
 # Nastavení vzhledu stránky
 st.set_page_config(page_title="AI Filmový Agent", page_icon="🎬", layout="wide")
