@@ -11,7 +11,7 @@ from google.genai import types
 # ==========================================
 # LOKÁLNÍ API KLÍČ (Pro hosting nech prázdné!)
 # ==========================================
-LOKALNI_API_KEY = ""
+LOKALNI_API_KEY = ""  # <-- Na GitHub nahrávej PRÁZDNÉ! Na webu se klíč načte ze Secrets.
 
 # Nastavení vzhledu stránky
 st.set_page_config(page_title="AI Filmový Agent", page_icon="🎬", layout="wide")
@@ -50,8 +50,9 @@ t = {
         "nav_label": "Zobrazení:",
         "nav_chat": "💬 AI Filmový Agent",
         "nav_cat": "📚 Katalog všech filmů",
-        "chat_welcome": "Ahoj! 👋 Jsem tvůj filmový AI agent. Napiš mi volně svými slovy, na co máš chuť, z jakého roku film hledáš, nebo jakou máš náladu (např. *'Chci akční filmy z roku 2026'* nebo *'Líbí se mi filmy s upíry'*), a já prohledám databázi!",
+        "chat_welcome": "Ahoj! 👋 Jsem tvůj filmový AI agent. Napiš mi volně svými slovy, na co máš chuť, z jakého roku film hledáš, nebo jakou máš náladu (např. *'Chci akční filmy z roku 2023'* nebo *'Líbí se mi filmy s upíry'*), a já prohledám databázi!",
         "chat_placeholder": "Napiš zprávu AI agentovi...",
+        "db_footer": "Databáze obsahuje nejnovější film ze dne 29. 9. 2023.",
         "missing_poster": "*(Plakát chybí)*",
         "detail": "Detail filmu",
         "year": "Rok vydání:",
@@ -77,8 +78,9 @@ t = {
         "nav_label": "View:",
         "nav_chat": "💬 AI Movie Agent",
         "nav_cat": "📚 Full Movie Catalog",
-        "chat_welcome": "Hi! 👋 I am your movie AI agent. Tell me in your own words what you're in the mood for, what release year you want, or what movies you like (e.g., *'Action movies from 2026'* or *'I like vampire movies'*), and I'll search the database!",
+        "chat_welcome": "Hi! 👋 I am your movie AI agent. Tell me in your own words what you're in the mood for, what release year you want, or what movies you like (e.g., *'Action movies from 2023'* or *'I like vampire movies'*), and I'll search the database!",
         "chat_placeholder": "Message the AI agent...",
+        "db_footer": "The database contains movies up to September 29, 2023.",
         "missing_poster": "*(Poster missing)*",
         "detail": "Movie details",
         "year": "Release year:",
@@ -119,7 +121,6 @@ with st.sidebar:
     st.divider()
     st.header("🧠 Nastavení AI Agenta")
     
-    # Bezpečné načtení klíče ze Streamlit Secrets (pro web) nebo z kódu/vstupu (pro PC)
     secret_key = ""
     try:
         if "GEMINI_API_KEY" in st.secrets:
@@ -152,11 +153,10 @@ with st.sidebar:
             st.rerun()
 
 # ==========================================
-# NAČTENÍ DAT A VEKTORIZACE (Optimalizováno pro web)
+# NAČTENÍ DAT A VEKTORIZACE
 # ==========================================
 @st.cache_resource
 def nacti_model_a_data_web():
-    # Přednostně načteme komprimovaný soubor pro web (šetří RAM na hostingu)
     if os.path.exists('filmy_web.csv.gz'):
         df = pd.read_csv('filmy_web.csv.gz', compression='gzip')
     else:
@@ -203,9 +203,9 @@ def zeptej_se_agenta(uzivatelsky_dotaz, klic, jazyk):
         Jsi expertní filmový AI agent. Uživatel ti napíše volným stylem, na jaký film má chuť, z jakého roku film hledá nebo zmíní oblíbené filmy.
         Tvým úkolem je vrátit JSON objekt se čtyřmi poli:
         1. "odpoved": Přátelská, přirozená reakce v jazyce '{jazyk}' (CZ = česky, EN = anglicky), kde uživateli potvrdíš jeho přání a představíš mu vybrané filmy.
-        2. "klicova_slova": Řetězec (string) s 10 až 15 anglickými klíčovými slovy, žánry a tématy popisujícími děj (např. 'action adventure superhero thriller'). Pokud uživatel nezmínil žánr ani téma (napsal jen rok, např. 'filmy z roku 2026'), nech toto pole prázdné "".
-        3. "rok_od": Celé číslo (integer) nebo null. Pokud uživatel zmínil konkrétní rok (např. 2026), nastav rok_od na 2026. Pokud zmínil období (např. 'od roku 2020' nebo '90. léta'), nastav začátek období (2020 nebo 1995). Jinak null.
-        4. "rok_do": Celé číslo (integer) nebo null. Pokud uživatel zmínil konkrétní rok (např. 2026), nastav rok_do na 2026. Pokud zmínil období (např. '90. léta'), nastav konec období (1999). Jinak null.
+        2. "klicova_slova": Řetězec (string) s 10 až 15 anglickými klíčovými slovy, žánry a tématy popisujícími děj (např. 'action adventure superhero thriller'). Pokud uživatel nezmínil žánr ani téma (napsal jen rok, např. 'filmy z roku 2022'), nech toto pole prázdné "".
+        3. "rok_od": Celé číslo (integer) nebo null. Pokud uživatel zmínil konkrétní rok (např. 2022), nastav rok_od na 2022. Pokud zmínil období (např. 'od roku 2020' nebo '90. léta'), nastav začátek období (2020 nebo 1995). Jinak null.
+        4. "rok_do": Celé číslo (integer) nebo null. Pokud uživatel zmínil konkrétní rok (např. 2022), nastav rok_do na 2022. Pokud zmínil období (např. '90. léta'), nastav konec období (1999). Jinak null.
         """
         
         modely_k_vyzkouseni = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash']
@@ -309,7 +309,13 @@ if aktivni_stranka == _['nav_chat']:
             if "movies" in msg:
                 vykresli_filmy_v_chatu(msg["movies"])
 
-    if prompt := st.chat_input(_['chat_placeholder']):
+    prompt = st.chat_input(_['chat_placeholder'])
+    st.markdown(
+        f"<p style='text-align: center; color: gray; font-size: 0.78rem; margin-top: -10px; margin-bottom: 0px;'>{_['db_footer']}</p>",
+        unsafe_allow_html=True
+    )
+
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
